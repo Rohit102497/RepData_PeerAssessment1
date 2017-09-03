@@ -1,23 +1,47 @@
 ## Load the dataset
 
-```{r}
+
+```r
 data <- read.csv("activity.csv")
 str(data)
 ```
 
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : Factor w/ 61 levels "2012-10-01","2012-10-02",..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+```
+
 ## Removings rows corresponding to date that have missing steps data
 
-```{r}
+
+```r
 library(dplyr)
 condition <- data %>% group_by(date) %>% summarise(count_NA = sum(!is.na(steps)))
 sub <- data[!(data$date %in% (condition$date[condition$count_NA == 0])),]
 str(sub)
+```
+
+```
+## 'data.frame':	15264 obs. of  3 variables:
+##  $ steps   : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ date    : Factor w/ 61 levels "2012-10-01","2012-10-02",..: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+```
+
+```r
 sum(is.na(sub$steps))
+```
+
+```
+## [1] 0
 ```
 
 ## Histogram of the total number of steps taken each day
 
-```{r}
+
+```r
 library(ggplot2)
 grouped_sum_data <- sub %>% group_by(date) %>% summarise(sum = sum(steps))
 
@@ -28,16 +52,24 @@ labs(title = "Total number of steps taken each day", x = "Day", y = "Total numbe
 theme(plot.title = element_text(hjust = 0.5))
 ```
 
+```
+## Warning: Ignoring unknown parameters: binwidth, bins, pad
+```
+
+![plot of chunk unnamed-chunk-114](figure/unnamed-chunk-114-1.png)
+
 ## Mean and median number of steps taken each day
 
-```{r}
+
+```r
 grouped_mean_median_data <- sub %>% group_by(date) %>% summarise(mean = mean(steps), median = median(steps))
 grouped_mean_median_data
 ```
 
 ## Time series plot of the average number of steps taken 
 
-```{r}
+
+```r
 grouped_mean_interval <- data %>% group_by(interval) %>% summarise(mean = mean(steps, na.rm = T))
 
 ggplot(grouped_mean_interval,aes(interval,mean)) + 
@@ -47,29 +79,52 @@ ggtitle("Time series plot of average number of steps") +
 theme(plot.title = element_text(hjust = 0.5))
 ```
 
+![plot of chunk unnamed-chunk-116](figure/unnamed-chunk-116-1.png)
+
 ## The 5-minute interval that, on average, contains the maximum number of steps
 
-```{r}
+
+```r
 grouped_mean_interval$interval[which(grouped_mean_interval$mean == max(grouped_mean_interval$mean))]
+```
+
+```
+## [1] 835
 ```
 
 ## Code to describe and show a strategy for imputing missing data
 
-```{r}
+
+```r
 # sub is a subset of dataset data with no missing values
 # grouped_mean_interval is dataframe with mean values of steps for each interval
 # Now, imputing NA values for rows corresponding to its interval
 # creating a copy of dataset data namely newdata
 newdata <- data 
 sum(is.na(newdata$steps))
+```
+
+```
+## [1] 2304
+```
+
+```r
 newdata$steps[which(is.na(newdata$steps))] = rep(grouped_mean_interval$mean,8)
 sum(is.na(newdata$steps))
+```
+
+```
+## [1] 0
+```
+
+```r
 # newdata is a dataset with imputed missing data
 ```
 
 ## Histogram of the total number of steps taken each day after missing values are imputed
 
-```{r}
+
+```r
 imputed_grouped_sum_data <- newdata %>% group_by(date) %>% summarise(sum = sum(steps))
 
 ggplot(imputed_grouped_sum_data, aes(date,sum)) + 
@@ -79,9 +134,16 @@ labs(title = "Total number of steps taken each day for imputed data", x = "Day",
 theme(plot.title = element_text(hjust = 0.5))
 ```
 
+```
+## Warning: Ignoring unknown parameters: binwidth, bins, pad
+```
+
+![plot of chunk unnamed-chunk-119](figure/unnamed-chunk-119-1.png)
+
 ## Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
 
-```{r}
+
+```r
 newdata$date <- as.Date(as.character(newdata$date))
 
 weekday <- c("Monday", " Tuesday", "Wednesday", "Thursday", "Friday")
@@ -98,4 +160,6 @@ ggtitle("Average number of steps taken per 5-minute interval across weekdays and
 theme(plot.title = element_text(hjust = 0.5)) + 
 ylab("Average number of steps taken")
 ```
+
+![plot of chunk unnamed-chunk-120](figure/unnamed-chunk-120-1.png)
 
